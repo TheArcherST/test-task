@@ -68,18 +68,10 @@ class AppealRoutingService:
                 f" lead_source_id={appeal.lead_source_id}"
             )
 
-        r = random.uniform(0, total_weight)
-        acc = 0.0
-        chosen: Operator | None = None
+        chosen_list = random.choices(operators, weights=weights, k=1)
 
-        for operator, weight in zip(operators, weights):
-            acc += weight
-            if r <= acc:
-                chosen = operator
-                break
-
-        if chosen is None:
+        if not chosen_list:
             raise NoAvailableOperatorError(
                 "Failed to choose operator by weight")
 
-        return chosen
+        return chosen_list[0]
