@@ -4,16 +4,14 @@ from pathlib import Path
 from dishka import Provider, Scope, provide
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import event
+from sqlalchemy import event, Engine
+from sqlalchemy.dialects.sqlite.aiosqlite import \
+    AsyncAdapt_aiosqlite_connection
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     create_async_engine,
 )
-
-
-class EnsureDatabaseFKsSentinel:
-    pass
 
 
 class ConfigSQLite(BaseModel):
@@ -93,25 +91,24 @@ class ProviderDatabase(Provider):
             # emit our own BEGIN.  aiosqlite still emits COMMIT/ROLLBACK correctly
             conn.exec_driver_sql("BEGIN")
 
+        @event.listens_for(Engine, "connect")
+        def set_sqlite_pragma(
+                dbapi_connection: AsyncAdapt_aiosqlite_connection,
+                connection_record,
+        ):
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
         return engine
 
     @provide(scope=Scope.SESSION)
     async def get_database_session(
             self,
             engine: AsyncEngine,
-            database_fks_sentinel: EnsureDatabaseFKsSentinel,
     ) -> AsyncGenerator[AsyncSession, None]:
-        assert database_fks_sentinel
         async with AsyncSession(
             engine,
             expire_on_commit=False,
         ) as session:
             yield session
-
-    @provide(scope=Scope.APP)
-    async def ensure_database_fks(
-            self,
-    ) -> EnsureDatabaseFKsSentinel:
-            from . import sqlalchemy_events
-            assert sqlalchemy_events
-            return EnsureDatabaseFKsSentinel()
