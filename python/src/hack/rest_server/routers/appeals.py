@@ -36,10 +36,6 @@ async def create_appeal(
     routing_service: FromDishka[AppealRoutingService],
     payload: CreateAppealDTO,
 ) -> Appeal:
-    stmt = (insert(Lead)
-            .values(id=payload.lead_id)
-            .on_conflict_do_nothing())
-    await session.execute(stmt)
     appeal = Appeal(
         status=AppealStatusEnum.ACTIVE,
         lead_id=payload.lead_id,

@@ -13,6 +13,10 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import Session
 
 
+class EnsureDatabaseFKsSentinel:
+    pass
+
+
 class ConfigSQLite(BaseModel):
     path: str | None = None
     test_path: str | None = None
@@ -81,12 +85,22 @@ class ProviderDatabase(Provider):
     async def get_database_session(
             self,
             engine: AsyncEngine,
+            database_fks_sentinel: EnsureDatabaseFKsSentinel,
     ) -> AsyncGenerator[AsyncSession, None]:
+        assert database_fks_sentinel
         async with AsyncSession(
             engine,
             expire_on_commit=False,
         ) as session:
             yield session
+
+    @provide(scope=Scope.APP)
+    async def ensure_database_fks(
+            self,
+    ) -> EnsureDatabaseFKsSentinel:
+            from . import sqlalchemy_events
+            assert sqlalchemy_events
+            return EnsureDatabaseFKsSentinel()
 
 
 class ProviderTestDatabase(Provider):
