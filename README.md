@@ -26,6 +26,10 @@ https://github.com/TheArcherST/hack
 2. **Роутеры**: [python/src/hack/rest_server/routers](https://github.com/TheArcherST/test-task/tree/master/python/src/hack/rest_server/routers)  
 3. **Тесты**: [python/src/hack/integration_tests](https://github.com/TheArcherST/test-task/tree/master/python/src/hack/integration_tests)
 
+Примечание: с утра перечитал ТЗ и понял, что забыл про эндпоинты для просмотра
+данных по лидам и их обращениям. По мере их добавления понял, что просто взять
+инфру написанную под PostgreSQL и подставить драйвер для SQLite... было не 
+лучшей идеей.  Решил проблему с тем, что FK и транзакции не работали.
 
 ## Интеграционные тесты
 
